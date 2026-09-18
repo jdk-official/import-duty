@@ -40,6 +40,17 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
   virtual_network_id    = azurerm_virtual_network.this.id
 }
 
+# This A record is created by the private endpoint's DNS zone group, not by us.
+# Azure owns it and stamps a `creator` tag containing the private endpoint's
+# resource GUID, and the IP is allocated from snet-pe at deploy time.
+#
+# aztfexport captured both as if they were user configuration, which made the
+# config non-idempotent across environments: a fresh deployment gets a different
+# PE GUID and potentially a different address, so every plan showed Terraform
+# trying to overwrite Azure's values with the source estate's. Proved by Act 5 -
+# the applied copy came back `1 to change` immediately after a successful apply.
+#
+# Both are Azure-managed, so both are ignored.
 resource "azurerm_private_dns_a_record" "blob" {
   name                = "stagentpoc${var.suffix}"
   zone_name           = azurerm_private_dns_zone.blob.name
@@ -48,6 +59,10 @@ resource "azurerm_private_dns_a_record" "blob" {
   records             = ["10.42.2.4"]
   tags = {
     creator = "created by private endpoint pe-blob-agentpoc with resource guid f269f680-d047-493c-be5a-82eb5b119ca8"
+  }
+
+  lifecycle {
+    ignore_changes = [tags, records]
   }
 }
 
