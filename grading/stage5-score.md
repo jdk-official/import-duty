@@ -30,9 +30,9 @@ silent cross-environment privilege grant.
 
 | | |
 |---|---|
-| Source estate identity | `33c0432a-…` |
-| New estate identity | `0a5716e7-…` |
-| Contributor holder on new RG | `0a5716e7-…` |
+| Source estate identity | `<source-identity>` |
+| New estate identity | `<new-identity>` |
+| Contributor holder on new RG | `<new-identity>` |
 
 Correct. The fix — `azurerm_user_assigned_identity.this.principal_id` in place
 of the literal — is proved by apply, not by reading.
