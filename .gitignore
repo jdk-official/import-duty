@@ -1,0 +1,28 @@
+# Terraform
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*.auto.tfvars
+terraform.tfvars
+
+# Raw discovery exports may carry tenant / subscription / resource IDs.
+# Commit curated summaries under docs/ instead, never the raw dumps.
+discovery/*.json
+discovery/*.jsonl
+!discovery/.gitkeep
+
+# Secrets
+.env
+*.pem
+*.key
+azureProfile.json
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.swp
