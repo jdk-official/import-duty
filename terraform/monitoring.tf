@@ -1,5 +1,5 @@
 resource "azurerm_log_analytics_workspace" "this" {
-  name                         = "law-agentpoc-8e9e55d7"
+  name                         = "law-agentpoc-${var.suffix}"
   location                     = var.location
   resource_group_name          = azurerm_resource_group.this.name
   local_authentication_enabled = true

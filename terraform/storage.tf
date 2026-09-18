@@ -1,5 +1,5 @@
 resource "azurerm_storage_account" "this" {
-  name                     = "stagentpoc8e9e55d7"
+  name                     = "stagentpoc${var.suffix}"
   location                 = var.location
   resource_group_name      = azurerm_resource_group.this.name
   account_tier             = "Standard"

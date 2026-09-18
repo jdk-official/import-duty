@@ -41,7 +41,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
 }
 
 resource "azurerm_private_dns_a_record" "blob" {
-  name                = "stagentpoc8e9e55d7"
+  name                = "stagentpoc${var.suffix}"
   zone_name           = azurerm_private_dns_zone.blob.name
   resource_group_name = azurerm_resource_group.this.name
   ttl                 = 10

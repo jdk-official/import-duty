@@ -1,11 +1,11 @@
 resource "azurerm_user_assigned_identity" "this" {
-  name                = "id-agentpoc-8e9e55d7"
+  name                = "id-agentpoc-${var.suffix}"
   location            = var.location
   resource_group_name = azurerm_resource_group.this.name
 }
 
 resource "azurerm_key_vault" "this" {
-  name                       = "kv-agentpoc-8e9e55d7"
+  name                       = "kv-agentpoc-${var.suffix}"
   location                   = var.location
   resource_group_name        = azurerm_resource_group.this.name
   tenant_id                  = var.tenant_id

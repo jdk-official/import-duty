@@ -8,6 +8,18 @@ variable "tenant_id" {
   type        = string
 }
 
+variable "suffix" {
+  description = "Uniqueness suffix for globally-unique resource names. Override to deploy a second copy of this estate."
+  type        = string
+  default     = "8e9e55d7"
+}
+
+variable "resource_group_name" {
+  description = "Resource group to deploy into."
+  type        = string
+  default     = "rg-agentpoc-8e9e55d7"
+}
+
 variable "location" {
   description = "Azure region for all resources."
   type        = string
