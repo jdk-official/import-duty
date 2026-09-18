@@ -14,7 +14,12 @@ terraform.tfvars
 # Commit curated summaries under docs/ instead, never the raw dumps.
 discovery/*.json
 discovery/*.jsonl
+discovery/*.log
+discovery/*.txt
 !discovery/.gitkeep
+
+# Run logs quote tenant / subscription / resource IDs back at you
+*.log
 
 # Secrets
 .env

@@ -30,10 +30,10 @@ apply. **Stage 5 is yours.**
 ## Layout
 
 ```
-scripts/     deploy-sandbox.sh, teardown.sh — build and destroy the test estate
+scripts/     preflight.sh (readiness), deploy-sandbox.sh, teardown.sh
+docs/        RUNBOOK.md — how to demo this; generated documentation
 discovery/   raw exports from the live tenant (gitignored — see below)
 terraform/   generated configuration
-docs/        generated documentation, curated summaries
 grading/     ground truth for the PoC — DO NOT point an agent here
 ```
 
@@ -64,9 +64,15 @@ assignment, which Contributor alone cannot do.
 
 ```bash
 az login
+./scripts/preflight.sh                  # check every prerequisite, change nothing
 ./scripts/deploy-sandbox.sh --what-if   # see what it would build
 ./scripts/deploy-sandbox.sh             # build it
 ```
+
+`deploy-sandbox.sh` is idempotent — re-run it with the same `RG=` and `SUFFIX=`
+to resume after a failure rather than starting over.
+
+**Demonstrating this to people:** follow [docs/RUNBOOK.md](docs/RUNBOOK.md).
 
 Then work the stages in order. Teardown when done:
 
