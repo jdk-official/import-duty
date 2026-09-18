@@ -1,0 +1,12 @@
+{
+	"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/virtualNetworks/vnet-agentpoc/providers/Microsoft.Insights/diagnosticSettings/diag-vnet": {
+		"resource_id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/virtualNetworks/vnet-agentpoc|diag-vnet",
+		"resource_type": "azurerm_monitor_diagnostic_setting",
+		"resource_name": "diag_diag_vnet0"
+	},
+	"/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Storage/storageAccounts/stagentpoc8e9e55d7/providers/Microsoft.Insights/diagnosticSettings/diag-storage": {
+		"resource_id": "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Storage/storageAccounts/stagentpoc8e9e55d7|diag-storage",
+		"resource_type": "azurerm_monitor_diagnostic_setting",
+		"resource_name": "diag_diag_storage0"
+	}
+}

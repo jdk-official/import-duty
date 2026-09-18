@@ -1,0 +1,21 @@
+azurerm_resource_group.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7]
+azurerm_user_assigned_identity.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.ManagedIdentity/userAssignedIdentities/id-agentpoc-8e9e55d7]
+azurerm_role_assignment.contributor: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Authorization/roleAssignments/d07294d6-8cf5-4a35-a788-8dfb312ec96f]
+azurerm_private_dns_zone.blob: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net]
+azurerm_log_analytics_workspace.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.OperationalInsights/workspaces/law-agentpoc-8e9e55d7]
+azurerm_key_vault.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.KeyVault/vaults/kv-agentpoc-8e9e55d7]
+azurerm_virtual_network.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/virtualNetworks/vnet-agentpoc]
+azurerm_storage_account.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Storage/storageAccounts/stagentpoc8e9e55d7]
+azurerm_subnet.pe: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/virtualNetworks/vnet-agentpoc/subnets/snet-pe]
+azurerm_subnet.app: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/virtualNetworks/vnet-agentpoc/subnets/snet-app]
+azurerm_private_dns_zone_virtual_network_link.blob: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net/virtualNetworkLinks/link-vnet-agentpoc]
+azurerm_private_dns_a_record.blob: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/privateDnsZones/privatelink.blob.core.windows.net/A/stagentpoc8e9e55d7]
+azurerm_monitor_diagnostic_setting.vnet: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/virtualNetworks/vnet-agentpoc|diag-vnet]
+azurerm_monitor_diagnostic_setting.storage: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Storage/storageAccounts/stagentpoc8e9e55d7|diag-storage]
+azurerm_storage_account_queue_properties.this: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Storage/storageAccounts/stagentpoc8e9e55d7]
+azurerm_private_endpoint.blob: Refreshing state... [id=/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/rg-agentpoc-8e9e55d7/providers/Microsoft.Network/privateEndpoints/pe-blob-agentpoc]
+
+No changes. Your infrastructure matches the configuration.
+
+Terraform has compared your real infrastructure against your configuration
+and found no differences, so no changes are needed.

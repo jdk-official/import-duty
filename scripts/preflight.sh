@@ -24,6 +24,9 @@ echo "=== Tooling ==="
 for c in az terraform aztfexport git; do
   if command -v "$c" >/dev/null 2>&1; then
     pass "$c" "$($c --version 2>&1 | head -1 | cut -c1-60)"
+  elif [ "$c" = "aztfexport" ] && [ -x "/c/Program Files/aztfexport/aztfexport.exe" ]; then
+    # winget installs it but does not add it to PATH
+    warn "$c" "installed but NOT on PATH - use the full path: C:\Program Files\aztfexport\aztfexport.exe"
   elif [ "$c" = "aztfexport" ]; then
     fail "$c" "needed for stage 3 - winget install Microsoft.Azure.AztfExport"
   else
