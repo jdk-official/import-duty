@@ -90,7 +90,8 @@ all; `terraform-import` and `avm-refactor` are plan-verified and never apply.
 
 ```
 scripts/        preflight.sh, deploy-sandbox.sh, discover.sh, diagram.py, teardown.sh
-docs/           RUNBOOK.md (how to demo this), architecture.md (generated)
+docs/           architecture.md (as-built design), waf-review.md (assessment),
+                generated-inventory.md (regenerated), RUNBOOK.md (how to demo this)
 discovery/      live export (gitignored) + architect-review.md
 terraform/      imported configuration — the proven baseline
 terraform-avm/  the same estate refactored onto Azure Verified Modules
@@ -131,7 +132,7 @@ az login
 ./scripts/deploy-sandbox.sh --what-if        # see what it would build
 ./scripts/deploy-sandbox.sh                  # build it
 ./scripts/discover.sh rg-agentpoc-xxxxxxxx   # export live state to discovery/
-python scripts/diagram.py                    # regenerate docs/architecture.md
+python scripts/diagram.py                    # regenerate docs/generated-inventory.md
 ```
 
 `deploy-sandbox.sh` is idempotent — re-run it with the same `RG=` and `SUFFIX=`

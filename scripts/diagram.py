@@ -5,6 +5,9 @@ Reads the JSON written by scripts/discover.sh and emits a Markdown document
 containing a Mermaid topology diagram, a dependency edge table, a reverse
 blast-radius table, and a register of create-time-immutable properties.
 
+This is the GENERATED half of the architecture documentation. The narrative
+document at docs/architecture.md is written, not generated, and cites this one.
+
 Everything is derived from the export. Nothing is hand-drawn, so a re-run after
 an estate change produces a corrected diagram rather than a stale one.
 
@@ -18,7 +21,7 @@ import sys
 from collections import defaultdict
 
 DISC = sys.argv[1] if len(sys.argv) > 1 else "discovery"
-OUT = sys.argv[2] if len(sys.argv) > 2 else "docs/architecture.md"
+OUT = sys.argv[2] if len(sys.argv) > 2 else "docs/generated-inventory.md"
 
 
 def load(name, default=None):
