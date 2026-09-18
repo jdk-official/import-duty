@@ -8,15 +8,22 @@ resource "azurerm_key_vault" "this" {
   name                       = "kv-agentpoc-8e9e55d7"
   location                   = var.location
   resource_group_name        = azurerm_resource_group.this.name
-  tenant_id                  = "11111111-1111-1111-1111-111111111111"
+  tenant_id                  = var.tenant_id
   sku_name                   = "standard"
   soft_delete_retention_days = 7
 }
 
-# Contributor on the resource group, held by the pipeline service principal
-# (33333333-3333-3333-3333-333333333333) that created these resources via az CLI.
+# Contributor at resource-group scope, held by the user-assigned managed identity
+# declared above. This grant is deliberately over-broad - see the Stage 1 review
+# (HIGH-3 / MEDIUM-8): Contributor includes storageAccounts/listkeys, which lets
+# the identity reach all blob data as the account rather than as itself.
+#
+# principal_id is a resource reference, not the literal GUID aztfexport emitted.
+# The literal pins the assignment to the identity in the ORIGINAL resource group,
+# so a fresh apply elsewhere would create a new identity and then grant
+# Contributor to the old one.
 resource "azurerm_role_assignment" "contributor" {
   scope              = azurerm_resource_group.this.id
   role_definition_id = local.contributor_role_definition_id
-  principal_id       = "22222222-2222-2222-2222-222222222222"
+  principal_id       = azurerm_user_assigned_identity.this.principal_id
 }

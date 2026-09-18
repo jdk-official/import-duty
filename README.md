@@ -80,6 +80,23 @@ Then work the stages in order. Teardown when done:
 ./scripts/teardown.sh rg-agentpoc-xxxxxxxx
 ```
 
+### Terraform variables
+
+`subscription_id` and `tenant_id` have **no defaults** — supply them per
+environment so no tenant identifier is committed:
+
+```bash
+cd terraform
+cat > terraform.tfvars <<'EOF'
+subscription_id = "<your subscription id>"
+tenant_id       = "<your tenant id>"
+EOF
+terraform plan
+```
+
+`terraform.tfvars` is gitignored. Alternatively export `TF_VAR_subscription_id`
+and `TF_VAR_tenant_id`.
+
 `teardown.sh` refuses any resource group not tagged
 `purpose=agent-pipeline-poc`, so it cannot be aimed at something real.
 

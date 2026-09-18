@@ -1,17 +1,20 @@
 variable "subscription_id" {
-  description = "Target Azure subscription ID (Azure subscription 1)."
+  description = "Target Azure subscription ID. No default - supply it per environment."
   type        = string
-  default     = "00000000-0000-0000-0000-000000000000"
+}
+
+variable "tenant_id" {
+  description = "Entra tenant ID the Key Vault belongs to. No default - supply it per environment."
+  type        = string
 }
 
 variable "location" {
-  description = "Azure region for all resources in rg-agentpoc-8e9e55d7."
+  description = "Azure region for all resources."
   type        = string
   default     = "uksouth"
 }
 
 locals {
-  # Built-in "Contributor" role definition GUID (b24988ac-6180-42a0-ab88-20f7382dd24c),
-  # referenced at the subscription scope it was assigned from.
+  # Built-in "Contributor" role definition GUID, referenced at subscription scope.
   contributor_role_definition_id = "/subscriptions/${var.subscription_id}/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"
 }
