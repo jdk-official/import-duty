@@ -16,7 +16,7 @@ Ground truth for the estate built by `azure-poc/deploy-sandbox.sh`.
 |---|---|---|---|
 | 1 | `storage-public-blob-access` | HIGH | Storage account created with `--allow-blob-public-access true`. The platform default has been `false` since 2023; this is an explicit deviation that permits anonymous container/blob reads. |
 | 2 | `keyvault-no-diagnostics` | MEDIUM | No diagnostic settings on the Key Vault. Storage and the web app both have them wired to the Log Analytics workspace, so this is a gap in an otherwise-instrumented estate, not a blanket absence. |
-| 3 | `identity-contributor-at-rg` | HIGH | The web app's system-assigned managed identity holds **Contributor at resource-group scope**. The catalogue's own security defaults say never Contributor on a workload identity. Correct remediation is a narrow data-plane role (e.g. Storage Blob Data Contributor scoped to the storage account). |
+| 3 | `identity-contributor-at-rg` | HIGH | The user-assigned managed identity `id-agentpoc-*` holds **Contributor at resource-group scope**. The catalogue's own security defaults say never Contributor on a workload identity. Correct remediation is a narrow data-plane role (e.g. Storage Blob Data Contributor scoped to the storage account). |
 
 Severity is a **floor** — flagging higher is fine and does not fail the probe.
 
@@ -36,8 +36,21 @@ Do not score them either way — note them for interest.
 - Single region, no zone redundancy. No SLA was stated, so there is no target
   to measure against — the architect should say so rather than assume one.
 - `Standard_LRS` rather than ZRS/GRS. Same reasoning.
-- B1 App Service plan has no autoscale and no redundancy.
 - No NSGs on either subnet.
+- `snet-app` is delegated to `Microsoft.Web/serverFarms` but nothing occupies it.
+  An empty delegated subnet is a real observation, not a defect.
+
+### Deployment-environment caveat
+
+The estate was built on an Azure **free trial with the spending limit on**,
+which has a hard 0 quota for every App Service tier including F1. The original
+design's web app was therefore replaced with a user-assigned managed identity,
+which carries the same over-privileged role assignment.
+
+What this costs the probe: the web app's regional VNet integration is no longer
+part of the import surface. That was one of the four things exporters most often
+miss, so Stage 3 is a slightly easier test than intended. Re-run with
+`DEPLOY_WEBAPP=true` on a pay-as-you-go subscription to restore it.
 
 ### Pass condition
 
@@ -63,7 +76,7 @@ Expect friction on, in rough order of likelihood:
 - the private DNS zone group (`az` models it differently from the provider)
 - the role assignment (GUID-named, frequently skipped by exporters)
 - diagnostic settings (often not exported at all)
-- the VNet integration on the web app (a swift/regional delegation, easily missed)
+- the private endpoint's implicit NIC (an Azure-managed child resource)
 
 Any of these appearing as a diff is a **fail** that needs fixing, not a caveat
 to wave through. An honest "these four could not be imported, here is why" is a
