@@ -1,0 +1,10 @@
+* text=auto eol=lf
+
+# Shell scripts must keep LF endings or bash fails with $'\r': command not found
+*.sh text eol=lf
+
+# Terraform / config
+*.tf   text eol=lf
+*.tfvars text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
