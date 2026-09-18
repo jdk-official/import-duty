@@ -37,19 +37,19 @@ RG_ID=$(az group show -n "$RG" --query id -o tsv | tr -d '\r')
 
 echo "==> Discovering $RG"
 
-echo "[1/9] resource inventory"
+echo "[1/12] resource inventory"
 az resource list -g "$RG" -o json > "$OUT/01-resources.json"
 
-echo "[2/9] resource group"
+echo "[2/12] resource group"
 az group show -n "$RG" -o json > "$OUT/02-resource-group.json"
 
-echo "[3/9] virtual networks + subnets"
+echo "[3/12] virtual networks + subnets"
 az network vnet list -g "$RG" -o json > "$OUT/03-vnets.json"
 
-echo "[4/9] network security groups"
+echo "[4/12] network security groups"
 az network nsg list -g "$RG" -o json > "$OUT/04-nsgs.json"
 
-echo "[5/9] private endpoints + private DNS"
+echo "[5/12] private endpoints + private DNS"
 az network private-endpoint list -g "$RG" -o json > "$OUT/.pe.json"
 az network private-dns zone list -g "$RG" -o json > "$OUT/.dns.json"
 python - "$OUT" <<'PY' > "$OUT/05-private-networking.json"
@@ -62,10 +62,10 @@ print(json.dumps({
 PY
 rm -f "$OUT/.pe.json" "$OUT/.dns.json"
 
-echo "[6/9] storage accounts"
+echo "[6/12] storage accounts"
 az storage account list -g "$RG" -o json > "$OUT/06-storage.json"
 
-echo "[7/9] key vaults"
+echo "[7/12] key vaults"
 rm -rf "$OUT/.kv"; mkdir -p "$OUT/.kv"
 for kv in $(az keyvault list -g "$RG" --query "[].name" -o tsv | tr -d '\r'); do
   az keyvault show -g "$RG" -n "$kv" -o json > "$OUT/.kv/${kv}.json"
@@ -77,7 +77,7 @@ print(json.dumps([json.load(open(f, encoding="utf-8")) for f in files], indent=2
 PY
 rm -rf "$OUT/.kv"
 
-echo "[8/9] identities + role assignments"
+echo "[8/12] identities + role assignments"
 az identity list -g "$RG" -o json > "$OUT/.id.json"
 az role assignment list --scope "$RG_ID" --include-inherited -o json > "$OUT/.ra.json"
 python - "$OUT" <<'PY' > "$OUT/08-identity-rbac.json"
@@ -90,7 +90,7 @@ print(json.dumps({
 PY
 rm -f "$OUT/.id.json" "$OUT/.ra.json"
 
-echo "[9/9] diagnostic settings (per resource)"
+echo "[9/12] diagnostic settings (per resource)"
 # `az monitor diagnostic-settings list` returns Bad Request for several resource
 # types whether or not settings exist, so it cannot tell "none configured" from
 # "query failed". Going via the REST API instead.
@@ -143,6 +143,88 @@ for idf in sorted(glob.glob(os.path.join(d, "*.id")),
 print(json.dumps(rows, indent=2))
 PY
 rm -rf "$DIAG"
+
+echo "[10/12] private endpoint DNS zone groups"
+# `az network private-endpoint list` does not return zone groups, so the link
+# between a private endpoint and its private DNS zone is invisible without this.
+rm -rf "$OUT/.zg"; mkdir -p "$OUT/.zg"
+for pe in $(az network private-endpoint list -g "$RG" --query "[].name" -o tsv | tr -d '\r'); do
+  az network private-endpoint dns-zone-group list -g "$RG" --endpoint-name "$pe" -o json \
+    > "$OUT/.zg/${pe}.json" 2>/dev/null || echo '[]' > "$OUT/.zg/${pe}.json"
+done
+python - "$OUT/.zg" <<'PY' > "$OUT/10-pe-dns-zone-groups.json"
+import glob, json, os, sys
+out = {}
+for f in sorted(glob.glob(os.path.join(sys.argv[1], "*.json"))):
+    out[os.path.basename(f)[:-5]] = json.load(open(f, encoding="utf-8"))
+print(json.dumps(out, indent=2))
+PY
+rm -rf "$OUT/.zg"
+
+echo "[11/12] storage detail: containers, blob service, blob diagnostics"
+# Three gaps the architect could not answer from the account object alone:
+#   - container public access levels (is anonymous access latent or live?)
+#   - blob service properties (soft delete, versioning, restore policy)
+#   - the blobServices/default diagnostic setting, which is where
+#     StorageBlobLogs actually comes from -- not the account.
+rm -rf "$OUT/.st"; mkdir -p "$OUT/.st"
+for sa in $(az storage account list -g "$RG" --query "[].name" -o tsv | tr -d '\r'); do
+  SA_ID=$(az storage account show -g "$RG" -n "$sa" --query id -o tsv | tr -d '\r')
+  # Listing containers is a DATA-plane call. Owner does not grant it -- it needs
+  # a Storage Blob Data role. A failure here must not be recorded as "no
+  # containers": that is the difference between "anonymous access is latent"
+  # and "anonymous access is live", which is the whole point of the check.
+  if az storage container list --account-name "$sa" --auth-mode login -o json \
+       > "$OUT/.st/${sa}.containers.json" 2>/dev/null; then
+    printf 'ok' > "$OUT/.st/${sa}.containerstatus.json.tmp"
+  else
+    echo '[]' > "$OUT/.st/${sa}.containers.json"
+    printf 'failed' > "$OUT/.st/${sa}.containerstatus.json.tmp"
+  fi
+  python -c "
+import json, sys
+print(json.dumps({'status': open(sys.argv[1], encoding='utf-8').read()}))
+" "$OUT/.st/${sa}.containerstatus.json.tmp" > "$OUT/.st/${sa}.containerstatus.json"
+  rm -f "$OUT/.st/${sa}.containerstatus.json.tmp"
+  az storage account blob-service-properties show --account-name "$sa" -g "$RG" -o json \
+    > "$OUT/.st/${sa}.blobservice.json" 2>/dev/null || echo '{}' > "$OUT/.st/${sa}.blobservice.json"
+  az rest --method get -o json \
+    --url "https://management.azure.com${SA_ID}/blobServices/default/providers/Microsoft.Insights/diagnosticSettings?api-version=2021-05-01-preview" \
+    > "$OUT/.st/${sa}.blobdiag.json" 2>/dev/null || echo '{"value":[]}' > "$OUT/.st/${sa}.blobdiag.json"
+done
+python - "$OUT/.st" <<'PY' > "$OUT/11-storage-detail.json"
+import glob, json, os, sys
+d, out = sys.argv[1], {}
+for f in sorted(glob.glob(os.path.join(d, "*.json"))):
+    account, kind, _ = os.path.basename(f).split(".", 2)
+    out.setdefault(account, {})[kind] = json.load(open(f, encoding="utf-8"))
+print(json.dumps(out, indent=2))
+PY
+rm -rf "$OUT/.st"
+
+echo "[12/12] role assignments at resource scope (below the resource group)"
+# The RG-scope query does not return assignments made directly on a resource.
+# If a data-plane role was granted at resource scope, effective permissions are
+# WIDER than the RG-scope view shows, not narrower.
+rm -rf "$OUT/.rs"; mkdir -p "$OUT/.rs"
+n=0
+for rid in $(az resource list -g "$RG" --query "[].id" -o tsv | tr -d '\r'); do
+  n=$((n+1))
+  az role assignment list --scope "$rid" -o json > "$OUT/.rs/${n}.json" 2>/dev/null \
+    || echo '[]' > "$OUT/.rs/${n}.json"
+  printf '%s' "$rid" > "$OUT/.rs/${n}.scope"
+done
+python - "$OUT/.rs" <<'PY' > "$OUT/12-role-assignments-resource-scope.json"
+import glob, json, os, sys
+d, out = sys.argv[1], []
+for f in sorted(glob.glob(os.path.join(d, "*.json")),
+                key=lambda p: int(os.path.basename(p)[:-5])):
+    scope = open(f[:-4] + "scope", encoding="utf-8").read()
+    for ra in json.load(open(f, encoding="utf-8")):
+        out.append({"scope": scope, "assignment": ra})
+print(json.dumps(out, indent=2))
+PY
+rm -rf "$OUT/.rs"
 
 UNANSWERED=$(python -c "
 import json, sys
