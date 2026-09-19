@@ -34,7 +34,9 @@ own built-in verification. That structure is what made the output trustworthy:
 
 **Efficiency.** Work we estimate at around **eighteen working days** — close to
 four weeks — for an experienced Azure engineer working manually was executed by
-agents in roughly **45 minutes**, with every stage independently verified. Agents also found
+agents in roughly **45 minutes**, with every stage independently verified. The
+whole engagement, including the session directing the agents, used about
+**$100** of model usage at API prices. Agents also found
 issues that were not planted — including the review's highest-severity finding.
 
 **What we found.** Every scored stage passed. The most useful result was not a
@@ -225,6 +227,27 @@ against measured agent execution time.
 | **Total** | **~18 days (about four weeks)** | **~45 min of agent execution** |
 
 Agent times are execution only; direction and review sat alongside them.
+
+### Cost
+
+Measured from the session's recorded token usage, priced at Claude API list
+rates. The work ran on a Claude Pro subscription with no additional charge; these
+figures are what the same tokens would cost billed through the API.
+
+| | Model | Measured (API-equivalent) |
+|---|---|---|
+| Specialist agents — four runs (Acts 1, 2, 5, 5a) | Opus 5, Sonnet 5 | **$8.70** |
+| Orchestration — the session that directed them | Opus 5 | **$93.04** |
+| **Total** | | **~$102** |
+
+Rates: Opus 5 $5 input / $25 output, Sonnet 5 $2 / $10 per million tokens; cache
+reads at 10% of input, cache writes at twice input.
+
+Most of the cost is orchestration, and most of that is a long working session
+re-reading its own history on every turn — the specialist agents themselves are
+under a tenth of it. The orchestration figure covers the whole working session,
+including work outside this engagement such as writing up the approach as a
+reusable skill, so it is an upper bound for the engagement itself.
 
 ### Quality
 
