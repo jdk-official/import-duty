@@ -45,8 +45,8 @@ when deployed somewhere new. The approach we recommend for real engagements
 avoids both by design.
 
 **Scope.** A disposable sandbox with known ground truth, chosen so every stage
-could be graded objectively. The next step is one live run against a real
-application estate.
+could be graded objectively. What we would do differently is under
+[How we'd improve next time](#how-wed-improve-next-time).
 
 ---
 
@@ -178,9 +178,15 @@ behaviour identical to the original and justifying every difference.
 
 **Result:** five of sixteen resources modernised. Where a module's defaults are
 more secure than the imported estate — network restrictions, purge protection,
-access model — the agent held the original behaviour and flagged each one,
-so those gaps are now named settings that can be changed deliberately. Four further modules were declined for a sound technical reason.
-Unscored: equivalence was reasoned rather than proven against live state.
+public ingestion — the agent held the original behaviour and flagged each one,
+so those gaps are now named settings that can be changed deliberately. Four
+further modules were declined for a sound technical reason.
+
+Unscored: equivalence was reasoned rather than proven against live state — and
+review since has found one place it does not hold. The live Key Vault uses RBAC
+authorisation; the refactored configuration sets the module's legacy
+access-policy flag, which disables RBAC. Applied, it would change the vault's
+access model rather than preserve it.
 
 ### Act 5a — Design first, then import
 
@@ -227,7 +233,7 @@ Agent times are execution only; direction and review sat alongside them.
 - **Beyond the brief.** The review's highest-severity finding was not planted,
   and the design-first import found an Azure-owned value that had not been
   identified.
-- **Proven, not asserted.** Every stage ends in a mechanical check — a zero
+- **Proven, not asserted.** Every scored stage ends in a mechanical check — a zero
   difference, a clean deployment — rather than a judgement that it looks right.
 
 ### Control
@@ -268,6 +274,83 @@ fully modular estate.
 only as credible as its checks. Every claim in this exercise was independently
 verified, and the grading key was fixed before the agents ran. That discipline
 is what turns agent output into evidence.
+
+---
+
+## Lessons learned
+
+### What worked — keep doing it
+
+**Plant the answers before the agents run.** Planted flaws, a deliberate trap,
+and criteria committed before the run turned agent output from plausible into
+gradable. Without them there is no way to tell a thorough review from a
+confident one. *Evidence:* [grading key](grading/grading-key.md) ·
+[Act 5a criteria](grading/act5a-criteria.md)
+
+**Verify every claim independently.** Checking caught real problems in three
+places: an agent's edit to Terraform state, which proved legitimate only once
+checked against live Azure; a discovery script recording failed queries as
+"none found"; and overclaims in this write-up's own first draft. *Evidence:*
+[Act 2 score](grading/act2-score.md) ·
+[discovery notes](docs/running.md) ·
+[write-up corrections](https://github.com/jdk-official/import-duty/commit/8f08030)
+
+**Rebuild from nothing.** Deploying into an empty resource group was the only
+test of whether the code could reproduce the estate, and it found a defect no
+other act could. *Evidence:* [Act 4 score](grading/act4-score.md)
+
+### What surprised us
+
+**Matching is not reproducing.** A Terraform configuration with zero difference
+from the live estate still carried two defects that surfaced only when deployed
+elsewhere. *Evidence:* [Act 4 score](grading/act4-score.md)
+
+**Modernising did not secure anything.** Azure Verified Module defaults were
+stronger than the estate's settings, and preserving behaviour meant switching
+them off. A refactor and a security improvement are separate decisions.
+*Evidence:* [refactor report](terraform-avm/avm-refactor-report.md)
+
+**The agents found what we did not plant.** The review's only critical finding —
+storage open to the internet despite its private endpoint — was not one of the
+planted flaws. *Evidence:* [Act 1 score](grading/act1-score.md)
+
+**Unverified equivalence was wrong in one place.** The modernisation reasoned
+that behaviour was preserved; the module source shows the Key Vault's access
+model would change. Reasoning is not proof. *Evidence:*
+[`terraform-avm/identity_security.tf`](terraform-avm/identity_security.tf)
+
+---
+
+## How we'd improve next time
+
+| Improvement | Why | Affects |
+|---|---|---|
+| Start with design-then-import; use `aztfexport` for discovery only | Act 5a avoided by design both defects Act 2 produced | Acts 2, 5a |
+| Prove modernisation against live state, not by reasoning | Act 5's reasoned equivalence missed a change to the Key Vault access model | Act 5 |
+| Run pre-flight before the rebuild | Act 3 was not run | Act 3 |
+| Time one act done by hand | The efficiency comparison rests on estimates | Benefits |
+| Build the test estate with compute | The sandbox could not host an App Service, so VNet integration never reached the import — Act 2 was an easier test than designed | Act 0 |
+| Keep tenant identifiers out from the first commit | Parameterise them in Terraform and scan before every commit, rather than cleaning history afterwards | All |
+| Run the documentation agent | `iac-docs-writer` would give cited, drift-checkable infrastructure docs; it was not run | Documentation |
+
+### Feedback to the agent catalogue
+
+Found in use; each is a candidate issue or pull request for the catalogue.
+
+- **`azure-architect` grounding does not resolve.** It declares Microsoft Learn
+  tool names that do not match those the installed grounding plugin exposes, so
+  it falls back to fetching documentation pages directly. It said so honestly,
+  but grounding is weaker than designed. *Evidence:*
+  [Act 1 score](grading/act1-score.md)
+- **`azure-architect` cannot write its own report.** It holds no write tools by
+  design, so a dispatcher must ask for the report in the reply, not in a file.
+  Worth stating in the agent's output contract.
+- **`avm-refactor` equivalence is unproven by default.** Without state it
+  reasons rather than plans, and here the reasoning missed a behaviour change.
+  Its contract could require a live plan diff where state is available.
+- **Skill behavioural evals only cover one plugin.** `tools/skill_eval.py` is
+  scoped to `backlog-delivery`, so scenarios for skills elsewhere are not
+  validated.
 
 ---
 
