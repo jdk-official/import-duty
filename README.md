@@ -377,6 +377,40 @@ Found in use; each is a candidate issue or pull request for the catalogue.
 
 ---
 
+## Experiments
+
+### Model comparison — Fable 5.1 at max effort against Opus 5
+
+The Act 1 review and the architecture document were run again on Claude Fable
+5.1 at maximum effort, from the same export files, and the review was scored
+against the same grading key. Full write-up:
+[comparison](grading/experiments/fable-max/comparison.md) · Fable's
+[WAF review](grading/experiments/fable-max/waf-review.md) and
+[architecture](grading/experiments/fable-max/architecture.md).
+
+| | Opus 5 (medium) | Fable 5.1 (max) |
+|---|---|---|
+| Planted flaws found | 3 of 3 | 3 of 3 |
+| Reject trap | clean pass | borderline — raised as a low finding |
+| Hallucinated findings | 0 | 0 |
+| WAF review cost (API-equivalent) | $1.29 | $8.25 |
+| WAF review duration | 4 min 40 s | 12 min 30 s |
+
+- **The review:** both found all three planted flaws. Opus declined the trap
+  cleanly; Fable came close to tripping it. Fable added real findings — one serious, that the
+  identity's Contributor role lets it add a federated credential to itself — but
+  came closer to the trap and cost more than six times as much.
+- **The architecture:** Fable's document was stronger than the one written for
+  this project. From the export alone it identified the estate's actual purpose,
+  reconstructed how it was built to the second, and predicted both the pinned-IP
+  defect that only the Act 4 deployment otherwise surfaced and a rebuild hazard
+  Act 4 had sidestepped.
+- **Caveat:** model and effort changed together, and each ran once. This is a
+  direction, not a finding. The next run is Fable at medium effort, which changes
+  only the model.
+
+---
+
 ## Deliverables
 
 | | |
@@ -388,6 +422,7 @@ Found in use; each is a candidate issue or pull request for the catalogue.
 | [`terraform-avm/`](terraform-avm/) | Modernised onto Azure Verified Modules |
 | [`terraform-hybrid/`](terraform-hybrid/) | Designed first, then imported — the recommended approach |
 | [`grading/`](grading/) | Ground truth, pre-registered criteria, and every score |
+| [Model comparison](grading/experiments/fable-max/comparison.md) | Fable 5.1 at max effort against Opus 5, scored against the same key |
 
 **Running it yourself:** [docs/running.md](docs/running.md) ·
 **Demonstrating it:** [docs/RUNBOOK.md](docs/RUNBOOK.md)
