@@ -1,4 +1,4 @@
-# Stage 3 score — `workflow-agents:terraform-import`
+# Act 2 score — `workflow-agents:terraform-import`
 
 **Run:** 2026-09-18 · **Model:** sonnet · **Scope:** `terraform/` only
 **Subject:** `rg-agentpoc-8e9e55d7` · **Output:** `terraform/`
@@ -86,4 +86,4 @@ deployed right now. Terraform sees no difference between code and reality.
 produces an equivalent environment. A zero-change plan against the *source*
 estate is a statement about fidelity, not about reproducibility — hardcoded
 names, the literal `principal_id`, and any region or global-uniqueness
-constraint are untested until Act 5 runs `apply` somewhere fresh.
+constraint are untested until Act 4 runs `apply` somewhere fresh.

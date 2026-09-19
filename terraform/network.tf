@@ -47,7 +47,7 @@ resource "azurerm_private_dns_zone_virtual_network_link" "blob" {
 # aztfexport captured both as if they were user configuration, which made the
 # config non-idempotent across environments: a fresh deployment gets a different
 # PE GUID and potentially a different address, so every plan showed Terraform
-# trying to overwrite Azure's values with the source estate's. Proved by Act 5 -
+# trying to overwrite Azure's values with the source estate's. Proved by Act 4 -
 # the applied copy came back `1 to change` immediately after a successful apply.
 #
 # Both are Azure-managed, so both are ignored.

@@ -32,9 +32,9 @@ own built-in verification. That structure is what made the output trustworthy:
   evaluation discipline, we planted known flaws and deliberate traps in the
   estate before any agent saw it, and graded every result against that key.
 
-**Efficiency.** Work we estimate at around **six working days** for an
-experienced Azure engineer working manually was executed by agents in roughly
-**45 minutes**, with every stage independently verified. Agents also found
+**Efficiency.** Work we estimate at around **eighteen working days** — close to
+four weeks — for an experienced Azure engineer working manually was executed by
+agents in roughly **45 minutes**, with every stage independently verified. Agents also found
 issues that were not planted — including the review's highest-severity finding.
 
 **What we found.** Every scored stage passed. The most useful result was not a
@@ -80,21 +80,23 @@ could not be graded generously after the fact.
 
 ## The acts
 
-| Act | Purpose | Catalogue agent | Model | Result |
-|---|---|---|---|---|
-| 1 | Build the test estate | *scripted, not an agent* | — | 9 resources, 3 planted flaws, 1 trap |
-| 2 | Understand and assess it | `expert-agents:azure-architect` | Opus | **Pass** |
-| 3 | Reverse-engineer into Terraform | `workflow-agents:terraform-import` | Sonnet | **Pass** |
-| 4 | Pre-flight a deployment target | `platform-agents:landing-zone-preflight-validator` | Sonnet | Not run |
-| 5 | Prove it rebuilds from nothing | *human-run deploy* | — | **Pass** |
-| 6 | Modernise onto Azure Verified Modules | `workflow-agents:avm-refactor` | Sonnet | Complete, unscored |
-| 6a | Design first, then import | `expert-agents:devops-infrastructure-expert` | Sonnet | **Pass** |
+| Act | Purpose | Catalogue agent | Model | Output | Result |
+|---|---|---|---|---|---|
+| 0 | Build the test estate | *scripted, not an agent* | — | [deploy script](scripts/deploy-sandbox.sh) · [grading key](grading/grading-key.md) | 9 resources, 3 planted flaws, 1 trap |
+| 1 | Understand and assess it | `expert-agents:azure-architect` | Opus | [WAF review](docs/waf-review.md) · [architecture](docs/architecture.md) · [agent's review](discovery/architect-review.md) | **Pass** · [score](grading/act1-score.md) |
+| 2 | Reverse-engineer into Terraform | `workflow-agents:terraform-import` | Sonnet | [`terraform/`](terraform/) · [import report](terraform/import-report.md) | **Pass** · [score](grading/act2-score.md) |
+| 3 | Pre-flight a deployment target | `platform-agents:landing-zone-preflight-validator` | Sonnet | — | Not run |
+| 4 | Prove it rebuilds from nothing | *human-run deploy* | — | [`terraform/`](terraform/) applied to an empty resource group | **Pass** · [score](grading/act4-score.md) |
+| 5 | Modernise onto Azure Verified Modules | `workflow-agents:avm-refactor` | Sonnet | [`terraform-avm/`](terraform-avm/) · [refactor report](terraform-avm/avm-refactor-report.md) | Complete, unscored |
+| 5a | Design first, then import | `expert-agents:devops-infrastructure-expert` | Sonnet | [`terraform-hybrid/`](terraform-hybrid/) · [import report](terraform-hybrid/hybrid-import-report.md) | **Pass** · [criteria](grading/act5a-criteria.md) · [score](grading/act5a-score.md) |
 
 ---
 
 ## What we did in each act
 
-### Act 1 — Build the test estate
+### Act 0 — Build the test estate
+
+**Output:** [scripts/deploy-sandbox.sh](scripts/deploy-sandbox.sh) · [grading key](grading/grading-key.md)
 
 A script built a small but realistic application platform: a virtual network
 with application and private-endpoint subnets, a storage account behind a
@@ -108,7 +110,9 @@ audit logging, and an identity holding far broader rights than it needed. One
 trap was set: default platform-managed encryption, which is sound and should not
 be flagged.
 
-### Act 2 — Understand and assess it
+### Act 1 — Understand and assess it
+
+**Output:** [WAF review](docs/waf-review.md) · [architecture](docs/architecture.md) · [agent's review](discovery/architect-review.md) · [score](grading/act1-score.md)
 
 **Agent:** `azure-architect` on Opus, reading a structured export of the live
 estate.
@@ -124,7 +128,9 @@ still open to the internet despite its private endpoint (the review's only
 critical), and a path by which the identity could read all storage data with a
 shared account key, bypassing the keyless design it was evidently built for.
 
-### Act 3 — Reverse-engineer into Terraform
+### Act 2 — Reverse-engineer into Terraform
+
+**Output:** [`terraform/`](terraform/) · [import report](terraform/import-report.md) · [score](grading/act2-score.md)
 
 **Agent:** `terraform-import` on Sonnet.
 
@@ -136,16 +142,18 @@ Re-verified independently against live Azure. All sixteen Terraform resources
 under management, including the relationships generators commonly miss — the
 private DNS zone group, the role assignment, and diagnostic settings.
 
-### Act 4 — Pre-flight a deployment target
+### Act 3 — Pre-flight a deployment target
 
 **Agent:** `landing-zone-preflight-validator` — not run in this exercise.
 
 Its role is to confirm, before any deployment, that a target subscription can
 receive it: policy restrictions, quota, registered providers, address-space
-overlap, and deployment permissions. Act 5 deployed into the same subscription
+overlap, and deployment permissions. Act 4 deployed into the same subscription
 as the source, where those conditions were already known.
 
-### Act 5 — Prove it rebuilds from nothing
+### Act 4 — Prove it rebuilds from nothing
+
+**Output:** [score and evidence](grading/act4-score.md)
 
 **Human-run deployment**, from a plan verified beforehand.
 
@@ -159,7 +167,9 @@ post-deployment check surfaced one configuration value owned by Azure rather
 than by us; it was corrected, and both estates now match their configuration
 exactly.
 
-### Act 6 — Modernise onto Azure Verified Modules
+### Act 5 — Modernise onto Azure Verified Modules
+
+**Output:** [`terraform-avm/`](terraform-avm/) · [refactor report](terraform-avm/avm-refactor-report.md)
 
 **Agent:** `avm-refactor` on Sonnet.
 
@@ -172,17 +182,19 @@ access model — the agent held the original behaviour and flagged each one,
 so those gaps are now named settings that can be changed deliberately. Four further modules were declined for a sound technical reason.
 Unscored: equivalence was reasoned rather than proven against live state.
 
-### Act 6a — Design first, then import
+### Act 5a — Design first, then import
+
+**Output:** [`terraform-hybrid/`](terraform-hybrid/) · [import report](terraform-hybrid/hybrid-import-report.md) · [criteria](grading/act5a-criteria.md) · [score](grading/act5a-score.md)
 
 **Agent:** `devops-infrastructure-expert` on Sonnet.
 
-The reverse of Act 3. Rather than generating code from the estate and then
+The reverse of Act 2. Rather than generating code from the estate and then
 correcting it, the agent wrote the intended configuration first — modules,
 variables, references — and bound the live estate into it using Terraform's
 native import capability. Tested without writing state or changing anything in Azure.
 
 **Result:** `15 to import, 0 to add, 0 to change, 0 to destroy`. Both defect
-classes found after Act 3 were avoided by design, with no correction needed, and
+classes found after Act 2 were avoided by design, with no correction needed, and
 a third Azure-owned value was identified unprompted. This is the approach we
 recommend for real engagements.
 
@@ -197,12 +209,14 @@ against measured agent execution time.
 
 | Work | Manual estimate | Agent execution |
 |---|---|---|
-| Security and Well-Architected review (Act 2) | 1 day | 5 min |
-| Import estate to a zero-difference Terraform state (Act 3) | 1 day | 16 min |
-| Refactor onto Azure Verified Modules (Act 6) | 1 day | 7 min |
-| Design-then-import configuration (Act 6a) | 1.5 days | 18 min |
-| Architecture document, review write-up, diagrams | 1.5 days | drafted, then reviewed |
-| **Total** | **~6 days** | **~45 min of agent time** |
+| **Act 0** — design and script a test estate with planted flaws; write the grading key | 2 days | orchestrated, not separately timed |
+| **Act 1** — build discovery tooling; security and Well-Architected review, 14 findings with remediation | 3 days | 5 min |
+| **Act 2** — import the estate to a zero-difference Terraform state | 2 days | 16 min |
+| **Act 4** — parameterise, rebuild in an empty resource group, resolve drift | 1 day | orchestrated; human-run deploy |
+| **Act 5** — refactor onto Azure Verified Modules with equivalence reasoning | 3 days | 7 min |
+| **Act 5a** — design the configuration, bind the estate with import blocks | 3 days | 18 min |
+| **Documentation** — architecture, WAF review, generated inventory and diagrams, runbook | 4 days | drafted, then reviewed |
+| **Total** | **~18 days (about four weeks)** | **~45 min of agent execution** |
 
 Agent times are execution only; direction and review sat alongside them.
 
@@ -229,12 +243,12 @@ Agent times are execution only; direction and review sat alongside them.
 
 ## Challenges
 
-**Matching reality is not the same as reproducing it.** Act 3's Terraform
+**Matching reality is not the same as reproducing it.** Act 2's Terraform
 matched the live estate perfectly and still carried two defects: a permission
 pinned to the original identity rather than to whichever identity the code
 creates, and values Azure generates itself recorded as if someone had chosen
 them. Neither shows up until the code is deployed somewhere new. This is why Act
-5 exists, and why we recommend the design-first approach of Act 6a.
+5 exists, and why we recommend the design-first approach of Act 5a.
 
 **Telling configuration from platform behaviour.** An exporter reads what Azure
 reports and cannot know which values a person chose and which Azure stamped on

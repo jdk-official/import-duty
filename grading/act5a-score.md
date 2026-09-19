@@ -1,7 +1,7 @@
-# Act 6a score — design-then-import
+# Act 5a score — design-then-import
 
 **Run:** 2026-09-18 · **Agent:** `expert-agents:devops-infrastructure-expert` (sonnet)
-**Scored against:** [stage6a-criteria.md](stage6a-criteria.md), committed before the run
+**Scored against:** [act5a-criteria.md](act5a-criteria.md), committed before the run
 **Agent cost:** 194,909 tokens, 135 tool calls, 18m04s
 
 ## Verdict: PASS — hypothesis held
@@ -40,7 +40,7 @@ private endpoint's auto-generated NIC name — and handled it the same way.
 Four AVM modules (resource group, VNet, storage account, private DNS zone)
 implement their core resource with `azapi_resource`. Confirmed from source.
 
-Refinement of Act 6's claim: `azapi_resource` **does** accept import blocks.
+Refinement of Act 5's claim: `azapi_resource` **does** accept import blocks.
 The reason to prefer `azurerm_*` here is diff granularity — `azapi` compares an
 opaque `body` document, `azurerm` a typed schema — not a hard technical block.
 
@@ -54,7 +54,7 @@ modules were adopted (identity, key vault, private endpoint).
 
 ## Effort
 
-| | Act 3 (generate-then-fix) | Act 6a (design-then-import) |
+| | Act 2 (generate-then-fix) | Act 5a (design-then-import) |
 |---|---|---|
 | Tokens | 147,223 | 194,909 |
 | Tool calls | 74 | 135 |
@@ -65,6 +65,6 @@ Roughly a third more effort for a result that needed no correction.
 
 ## Open
 
-15 resources imported against Act 3's 16. The difference is
+15 resources imported against Act 2's 16. The difference is
 `azurerm_storage_account_queue_properties`, which holds only default values.
 Not yet established whether omitting it is correct or a gap.

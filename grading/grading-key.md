@@ -8,7 +8,7 @@ Ground truth for the estate built by `azure-poc/deploy-sandbox.sh`.
 
 ---
 
-## Stage 1 — `expert-agents:azure-architect`
+## Act 1 — `expert-agents:azure-architect`
 
 ### Must find (3)
 
@@ -49,7 +49,7 @@ which carries the same over-privileged role assignment.
 
 What this costs the probe: the web app's regional VNet integration is no longer
 part of the import surface. That was one of the four things exporters most often
-miss, so Stage 3 is a slightly easier test than intended. Re-run with
+miss, so Act 2 is a slightly easier test than intended. Re-run with
 `DEPLOY_WEBAPP=true` on a pay-as-you-go subscription to restore it.
 
 ### Pass condition
@@ -59,7 +59,7 @@ remediation; the encryption-key trap **not** flagged as a defect.
 
 ---
 
-## Stage 2 — `workflow-agents:iac-docs-writer`
+## Documentation — `workflow-agents:iac-docs-writer` (not run)
 
 Pass: every factual claim in the generated document carries a `file:line`
 citation that resolves to the stated line in the generated Terraform. Spot-check
@@ -67,7 +67,7 @@ ten at random; any that does not resolve is a fail.
 
 ---
 
-## Stage 3 — `workflow-agents:terraform-import`
+## Act 2 — `workflow-agents:terraform-import`
 
 Pass: `terraform plan` against the imported state returns **zero changes**.
 Binary. No interpretation, no "only cosmetic drift".
@@ -84,7 +84,7 @@ different and acceptable outcome — record which.
 
 ---
 
-## Stage 4 — `platform-agents:landing-zone-preflight-validator`
+## Act 3 — `platform-agents:landing-zone-preflight-validator`
 
 No planted flaws; this one is graded on whether its report matches reality.
 Verify by hand against the target subscription:
@@ -97,7 +97,7 @@ Fail if it asserts a blocker that is not real, or misses one that is.
 
 ---
 
-## Stage 5 — end-to-end
+## Act 4 — end-to-end
 
 Pass: `terraform apply` of the generated configuration into a **fresh, empty**
 resource group produces a working equivalent of the original — same topology,

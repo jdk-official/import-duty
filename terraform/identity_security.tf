@@ -14,7 +14,7 @@ resource "azurerm_key_vault" "this" {
 }
 
 # Contributor at resource-group scope, held by the user-assigned managed identity
-# declared above. This grant is deliberately over-broad - see the Stage 1 review
+# declared above. This grant is deliberately over-broad - see the Act 1 review
 # (HIGH-3 / MEDIUM-8): Contributor includes storageAccounts/listkeys, which lets
 # the identity reach all blob data as the account rather than as itself.
 #

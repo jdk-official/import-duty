@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-# Stage 1 discovery: export live Azure state to discovery/ as structured JSON.
+# Act 1 discovery: export live Azure state to discovery/ as structured JSON.
 #
 # Read-only. Reads nothing but ARM, writes nothing but local files.
 #

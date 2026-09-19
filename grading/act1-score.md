@@ -1,4 +1,4 @@
-# Stage 1 score — `expert-agents:azure-architect`
+# Act 1 score — `expert-agents:azure-architect`
 
 **Run:** 2026-09-18 · **Model:** opus · **Scope:** `discovery/` only
 **Subject:** `rg-agentpoc-8e9e55d7` · **Review:** `discovery/architect-review.md`

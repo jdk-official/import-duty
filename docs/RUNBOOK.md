@@ -17,7 +17,7 @@ Run this the day before, not five minutes before:
 
 It checks tooling, session, subscription class, permissions, providers and the
 estate itself, and exits non-zero if anything is missing. A red `aztfexport`
-line is the usual one — stage 3 cannot run without it.
+line is the usual one — Act 2 cannot run without it.
 
 Then stand the estate up, or confirm it survived:
 
@@ -45,7 +45,7 @@ The interesting claim is that the output was *graded*.
 
 ---
 
-## Act 1 — The estate nobody documented (3 min)
+## Act 0 — The estate nobody documented (3 min)
 
 ```bash
 az resource list -g rg-agentpoc-<suffix> -o table
@@ -61,7 +61,7 @@ estate — this one is just small enough to fit on a slide.
 
 ---
 
-## Act 2 — Understand it (8–12 min)
+## Act 1 — Understand it (8–12 min)
 
 Export the live state, then hand it to the architect:
 
@@ -100,7 +100,7 @@ a sharp audience member will think you are hiding a miss.
 
 ---
 
-## Act 3 — Reverse-engineer it (10–15 min)
+## Act 2 — Reverse-engineer it (10–15 min)
 
 > Dispatch `workflow-agents:terraform-import` on `sonnet` against the resource
 > group.
@@ -124,7 +124,7 @@ outcome and worth showing. A silent gap is not.
 
 ---
 
-## Act 4 — Can it land somewhere else? (5 min)
+## Act 3 — Can it land somewhere else? (5 min)
 
 > Dispatch `platform-agents:landing-zone-preflight-validator` on `sonnet`
 > against a *different* target resource group or subscription.
@@ -140,7 +140,7 @@ are the normal case, not the exception.
 
 ---
 
-## Act 5 — Prove it (5 min)
+## Act 4 — Prove it (5 min)
 
 ```bash
 az group create -n rg-agentpoc-restore -l uksouth
@@ -193,7 +193,7 @@ user-assigned managed identity carrying the same over-privileged role
 assignment.
 
 What that costs: the web app's regional VNet integration is out of the import
-surface, and it was one of the four things exporters most often miss. Stage 3
+surface, and it was one of the four things exporters most often miss. Act 2
 is a slightly easier test than designed.
 
 Disclose this if anyone asks how hard the test was. Re-run with

@@ -1,4 +1,4 @@
-# Act 5 score — end-to-end reproducibility
+# Act 4 score — end-to-end reproducibility
 
 **Run:** 2026-09-18 · **Applied by:** the user (agents hold no apply rights)
 **Source estate:** `rg-agentpoc-8e9e55d7` · **Target:** `rg-agentpoc-restore01` (fresh, empty)
@@ -22,7 +22,7 @@ proof the pipeline is worth pointing at a real estate.
 
 ### The role assignment is the headline
 
-This was the defect found before Act 5 ran: `aztfexport` emitted
+This was the defect found before Act 4 ran: `aztfexport` emitted
 `principal_id` as a literal GUID pinned to the identity in the *source* resource
 group. Applied unchanged, a fresh deployment would have created a new identity
 and then granted Contributor on the new resource group to the **old** one — a
@@ -37,7 +37,7 @@ silent cross-environment privilege grant.
 Correct. The fix — `azurerm_user_assigned_identity.this.principal_id` in place
 of the literal — is proved by apply, not by reading.
 
-## The defect Act 5 caught
+## The defect Act 4 caught
 
 Immediately after a successful apply, `terraform plan` returned **exit 2**:
 
@@ -76,7 +76,7 @@ minimal fix restores idempotence.
 ## What this says about the pipeline
 
 A zero-change plan against the source estate is **fidelity**. It is a strong
-result and it is not reproducibility. Act 3 passed cleanly and the config still
+result and it is not reproducibility. Act 2 passed cleanly and the config still
 carried two reproducibility defects — one caught by reading it before the apply
 (the role assignment), one that only a real apply into a fresh environment could
 surface (the Azure-managed tag).
@@ -84,7 +84,7 @@ surface (the Azure-managed tag).
 Both are inherent to reverse-engineering, not to this tool: an exporter reads
 ARM and cannot distinguish "the user set this" from "Azure stamped this".
 
-**Act 5 is not optional.** It is the only act that tests the thing the exercise
+**Act 4 is not optional.** It is the only act that tests the thing the exercise
 is actually for.
 
 ## Cost note
