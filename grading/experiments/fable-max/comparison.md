@@ -134,8 +134,9 @@ cleanly and cost a sixth as much.** Fable's additions were real and one was
 serious, but it came closer to the trap and cost more.
 
 **On open-ended reasoning — reconstructing intent, build forensics, predicting
-hazards — Fable was clearly stronger**, and it predicted two defects that
-otherwise only a deployment surfaced.
+hazards — Fable was clearly stronger**, and from the export alone it predicted a
+defect that otherwise only a deployment surfaced, plus a rebuild hazard that the
+deployment had sidestepped.
 
 Tentatively: keep `azure-architect` reviews on Opus, and trial Fable for as-built
 architecture and reverse-engineering work. With one run per model and model and
