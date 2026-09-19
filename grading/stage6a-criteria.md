@@ -23,7 +23,7 @@ evaluated at plan time, which is what makes this test free.
 
 ## Defect class 1 — literal where a reference belonged
 
-Act 3 emitted `principal_id = "33c0432a-…"`, pinning the role assignment to the
+Act 3 emitted `principal_id = "<literal GUID>"`, pinning the role assignment to the
 source estate's identity. Act 5 proved a fresh apply would have granted
 Contributor on a new resource group to the old estate's identity.
 

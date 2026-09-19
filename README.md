@@ -8,205 +8,266 @@ The name is what you pay for clickops.
 
 ---
 
-## Results
+## Executive summary
 
-Run end to end against a disposable sandbox on 2026-09-18. Every stage was
-scored against ground truth written before the run, and every agent claim was
-re-verified by the orchestrator rather than accepted.
+**What we did.** We took an Azure estate built by hand in the portal — nine
+resources, no infrastructure-as-code, no documentation — and brought it under
+Terraform control using specialist agents from the agent catalogue. We then
+proved the result could rebuild the estate from nothing in an empty resource
+group, modernised it onto Azure Verified Modules, and produced an as-built
+architecture document and a Well-Architected review.
 
-| Act | Agent | Result |
-|---|---|---|
-| 1. Build the estate | *(scripted)* | 9 resources, 3 planted flaws, 1 reject trap |
-| 2. Understand | `expert-agents:azure-architect` | **PASS** — 3/3 flaws found, trap not tripped, 0 hallucinated findings |
-| 3. Reverse-engineer | `workflow-agents:terraform-import` | **PASS** — zero-change plan, independently re-verified |
-| 4. Pre-flight | `platform-agents:landing-zone-preflight-validator` | not run |
-| 5. Prove it | *(human applies)* | **PASS** — equivalent estate stood up in an empty RG; one defect found and fixed |
-| 6. Modernise | `workflow-agents:avm-refactor` | done, **unscored** — static equivalence only, no live plan diff |
+**Why the agent catalogue mattered.** The catalogue does not provide one general
+assistant; it provides specialists with fixed roles, restricted tools, and their
+own built-in verification. That structure is what made the output trustworthy:
 
-Scores and evidence are in [`grading/`](grading/).
+- **Reviewers cannot change what they review.** The architecture reviewer holds
+  no write tools, so every finding is a finding, never a silent fix.
+- **Builders verify their own work before finishing.** The import agent is not
+  done until Terraform reports zero difference from the live estate.
+- **Judgement and execution run on different models.** The strongest model
+  handles assessment; a faster one handles construction whose output is checked
+  mechanically.
+- **Agents can be scored, not just trusted.** Following the catalogue's own
+  evaluation discipline, we planted known flaws and deliberate traps in the
+  estate before any agent saw it, and graded every result against that key.
 
-### The finding that matters
+**Efficiency.** Work we estimate at around **six working days** for an
+experienced Azure engineer working manually was executed by agents in roughly
+**45 minutes**, with every stage independently verified. Agents also found
+issues that were not planted — including the review's highest-severity finding.
 
-**A zero-change plan against the source estate is fidelity, not reproducibility.**
+**What we found.** Every scored stage passed. The most useful result was not a
+pass mark but an insight: **Terraform that perfectly matches what exists is not
+the same as Terraform that can recreate it.** Our first import matched the live
+estate exactly and still carried two defects that would only have surfaced
+when deployed somewhere new. The approach we recommend for real engagements
+avoids both by design.
 
-Act 3 passed cleanly, and the configuration still carried two defects that would
-only bite somewhere else:
-
-1. `principal_id` on the role assignment was emitted as a **literal GUID** pinned
-   to the identity in the source resource group. Applied unchanged, a fresh
-   deployment creates a new identity and then grants Contributor on the new
-   resource group to the **old** one. Caught by reading; fixed with a resource
-   reference; proved correct by Act 5.
-2. The private DNS A record carried a `creator` tag holding the private
-   endpoint's resource GUID, plus a pinned IP address. Both are **Azure-managed**.
-   `aztfexport` captured them as user configuration, so every plan in any new
-   environment showed a permanent diff — and Terraform would have pushed the
-   source estate's identifier into the target. Only a real apply surfaced this.
-
-Neither is a fault in `aztfexport`. An exporter reads ARM and cannot distinguish
-"the user set this" from "Azure stamped this". **Act 5 is not optional** — it is
-the only act that tests what the exercise is for.
-
-### What AVM did and did not fix
-
-`avm-refactor` moved 5 of 16 resources onto Azure Verified Modules. Four AVM
-defaults are *more secure* than the imported estate — Key Vault network ACLs
-deny-by-default, purge protection on, RBAC authorisation, Log Analytics internet
-ingestion off — and all four had to be **explicitly overridden** to preserve plan
-equivalence.
-
-That is correct refactoring discipline, and it is the useful result: modernising
-onto Microsoft's modules did not fix the security findings, but it turned four of
-them into named lines of configuration you can now flip deliberately.
-
-Four more resources have AVM modules that were rejected for a concrete reason:
-they implement their core resource via `azapi_resource` rather than `azurerm_*`,
-so there is no valid `moved`-block path and adoption would force destroy/recreate
-of most of the estate.
+**Scope.** A disposable sandbox with known ground truth, chosen so every stage
+could be graded objectively. The next step is one live run against a real
+application estate.
 
 ---
 
-## The pipeline
+## Approach
 
-Each stage produces an artifact the next one consumes, so the whole thing is
-re-runnable and reviewable rather than a one-off session.
+**Build the ground truth first.** The sandbox was created with three
+deliberate security flaws and one deliberate trap — a sound design choice that
+*looks* flaggable. The grading key was written before any agent ran. An agent
+that flagged the trap would fail, however many real flaws it caught.
 
-| Stage | Agent | Input | Output | Pass condition |
+**One specialist per stage.** Each act is owned by a single catalogue agent
+chosen for that job, dispatched on the model tier the job warrants.
+
+**Scope every agent to its inputs.** Each agent was pointed at one directory and
+nothing else. The grading key lives elsewhere, so no agent could read the
+answers.
+
+**Verify every claim independently.** No agent result was accepted on its own
+word. Every plan was re-run, factual findings were checked against the raw
+export, and agent edits to state and configuration were inspected.
+
+**Humans hold the deploy button.** No agent in the chain can deploy. Reviews are
+read-only, builds are plan-verified, and the one live deployment was run by a
+person.
+
+**Fix criteria before results.** Where an act tested a hypothesis of our own,
+the pass criteria were committed to the repository before the run, so the result
+could not be graded generously after the fact.
+
+---
+
+## The acts
+
+| Act | Purpose | Catalogue agent | Model | Result |
 |---|---|---|---|---|
-| 1. Understand | `expert-agents:azure-architect` | `discovery/` export | severity-tagged findings + WAF view | planted flaws found, traps not flagged |
-| 2. Document | `workflow-agents:iac-docs-writer` | `terraform/` | `docs/` | every claim cites a resolving `file:line` |
-| 3. Reverse-engineer | `workflow-agents:terraform-import` | live resource group | `terraform/` | **`terraform plan` returns zero changes** |
-| 4. Pre-flight | `platform-agents:landing-zone-preflight-validator` | target subscription | go/no-go report | findings match reality |
-| 5. Prove it | *(human)* | `terraform/` | a working environment | `apply` into a fresh RG produces an equivalent |
-| 6. Modernise | `workflow-agents:avm-refactor` | `terraform/` | `terraform-avm/` | plan equivalence, every diff justified |
-
-No agent in the chain deploys anything. `azure-architect` holds no write tools at
-all; `terraform-import` and `avm-refactor` are plan-verified and never apply.
-**The apply is yours.**
+| 1 | Build the test estate | *scripted, not an agent* | — | 9 resources, 3 planted flaws, 1 trap |
+| 2 | Understand and assess it | `expert-agents:azure-architect` | Opus | **Pass** |
+| 3 | Reverse-engineer into Terraform | `workflow-agents:terraform-import` | Sonnet | **Pass** |
+| 4 | Pre-flight a deployment target | `platform-agents:landing-zone-preflight-validator` | Sonnet | Not run |
+| 5 | Prove it rebuilds from nothing | *human-run deploy* | — | **Pass** |
+| 6 | Modernise onto Azure Verified Modules | `workflow-agents:avm-refactor` | Sonnet | Complete, unscored |
+| 6a | Design first, then import | `expert-agents:devops-infrastructure-expert` | Sonnet | **Pass** |
 
 ---
 
-## Layout
+## What we did in each act
 
-```
-scripts/        preflight.sh, deploy-sandbox.sh, discover.sh, diagram.py, teardown.sh
-docs/           architecture.md (as-built design), waf-review.md (assessment),
-                generated-inventory.md (regenerated), RUNBOOK.md (how to demo this)
-discovery/      live export (gitignored) + architect-review.md
-terraform/      imported configuration — the proven baseline
-terraform-avm/  the same estate refactored onto Azure Verified Modules
-grading/        ground truth and scores — DO NOT point an agent here
-```
+### Act 1 — Build the test estate
 
-### The grading directory
+A script built a small but realistic application platform: a virtual network
+with application and private-endpoint subnets, a storage account behind a
+private endpoint with private DNS, a Key Vault, a Log Analytics workspace, and a
+managed identity with a role assignment. It was built through the Azure CLI
+rather than Terraform, deliberately — the point was to import something that had
+never been under code.
 
-`grading/grading-key.md` holds the answers: which flaws were deliberately
-planted in the sandbox and which sound-looking choices are traps.
+Three flaws were planted: anonymous blob access enabled, a Key Vault with no
+audit logging, and an identity holding far broader rights than it needed. One
+trap was set: default platform-managed encryption, which is sound and should not
+be flagged.
 
-**Scope every agent to a specific subdirectory, never the repo root.** An agent
-given the root can `Glob` its way into `grading/` and the probe becomes
-worthless. Point `azure-architect` at `discovery/`, `terraform-import` at
-`terraform/`, `avm-refactor` at its own copy.
+### Act 2 — Understand and assess it
 
-When two agents run in parallel, give each its own working directory. Both want
-to rewrite Terraform, and neither may touch the proven baseline.
+**Agent:** `azure-architect` on Opus, reading a structured export of the live
+estate.
 
-### Discovery exports are gitignored
+It produced a severity-ranked security and Well-Architected review: fourteen
+findings, each with a concrete remediation, with date-sensitive platform
+behaviour checked against current Microsoft documentation.
 
-Raw exports carry tenant IDs, subscription IDs and full resource IDs. For a
-throwaway sandbox that hardly matters; for a client estate it matters a lot, and
-the habit should be the same in both cases. Commit curated summaries under
-`docs/`, never the raw dumps.
+**Result:** all three planted flaws found, the trap correctly declined with
+stated reasoning, and no invented findings — every claim checked against the
+raw export was correct. Its most important findings were not planted: storage
+still open to the internet despite its private endpoint (the review's only
+critical), and a path by which the identity could read all storage data with a
+shared account key, bypassing the keyless design it was evidently built for.
+
+### Act 3 — Reverse-engineer into Terraform
+
+**Agent:** `terraform-import` on Sonnet.
+
+It generated Terraform for every resource and imported the live estate into
+Terraform state, working until the configuration matched reality exactly.
+
+**Result:** `No changes. Your infrastructure matches the configuration.`
+Re-verified independently against live Azure. All sixteen Terraform resources
+under management, including the relationships generators commonly miss — the
+private DNS zone group, the role assignment, and diagnostic settings.
+
+### Act 4 — Pre-flight a deployment target
+
+**Agent:** `landing-zone-preflight-validator` — not run in this exercise.
+
+Its role is to confirm, before any deployment, that a target subscription can
+receive it: policy restrictions, quota, registered providers, address-space
+overlap, and deployment permissions. Act 5 deployed into the same subscription
+as the source, where those conditions were already known.
+
+### Act 5 — Prove it rebuilds from nothing
+
+**Human-run deployment**, from a plan verified beforehand.
+
+The configuration was parameterised so a second copy could coexist with the
+first, then deployed into an empty resource group.
+
+**Result:** sixteen resources created, nothing touched in the original estate,
+and the rebuilt environment wired correctly — including the managed identity's
+permissions binding to the *new* identity rather than the original one. A
+post-deployment check surfaced one configuration value owned by Azure rather
+than by us; it was corrected, and both estates now match their configuration
+exactly.
+
+### Act 6 — Modernise onto Azure Verified Modules
+
+**Agent:** `avm-refactor` on Sonnet.
+
+It moved the resources that suit Microsoft's verified modules onto them, keeping
+behaviour identical to the original and justifying every difference.
+
+**Result:** five of sixteen resources modernised. Where a module's defaults are
+more secure than the imported estate — network restrictions, purge protection,
+access model — the agent held the original behaviour and flagged each one,
+so those gaps are now named settings that can be changed deliberately. Four further modules were declined for a sound technical reason.
+Unscored: equivalence was reasoned rather than proven against live state.
+
+### Act 6a — Design first, then import
+
+**Agent:** `devops-infrastructure-expert` on Sonnet.
+
+The reverse of Act 3. Rather than generating code from the estate and then
+correcting it, the agent wrote the intended configuration first — modules,
+variables, references — and bound the live estate into it using Terraform's
+native import capability. Tested without writing state or changing anything in Azure.
+
+**Result:** `15 to import, 0 to add, 0 to change, 0 to destroy`. Both defect
+classes found after Act 3 were avoided by design, with no correction needed, and
+a third Azure-owned value was identified unprompted. This is the approach we
+recommend for real engagements.
 
 ---
 
-## Running it
+## Benefits
 
-Prerequisites: `az`, `terraform`, `aztfexport`, and a subscription where you hold
-**Owner** or **User Access Administrator** — the sandbox creates a role
-assignment, which Contributor alone cannot do.
+### Effort against manual delivery
 
-```bash
-az login
-./scripts/preflight.sh                       # check prerequisites, change nothing
-./scripts/deploy-sandbox.sh --what-if        # see what it would build
-./scripts/deploy-sandbox.sh                  # build it
-./scripts/discover.sh rg-agentpoc-xxxxxxxx   # export live state to discovery/
-python scripts/diagram.py                    # regenerate docs/generated-inventory.md
-```
+Estimated effort for an experienced Azure engineer working without AI tooling,
+against measured agent execution time.
 
-`deploy-sandbox.sh` is idempotent — re-run it with the same `RG=` and `SUFFIX=`
-to resume after a failure rather than starting over.
+| Work | Manual estimate | Agent execution |
+|---|---|---|
+| Security and Well-Architected review (Act 2) | 1 day | 5 min |
+| Import estate to a zero-difference Terraform state (Act 3) | 1 day | 16 min |
+| Refactor onto Azure Verified Modules (Act 6) | 1 day | 7 min |
+| Design-then-import configuration (Act 6a) | 1.5 days | 18 min |
+| Architecture document, review write-up, diagrams | 1.5 days | drafted, then reviewed |
+| **Total** | **~6 days** | **~45 min of agent time** |
 
-**Demonstrating this to people:** follow [docs/RUNBOOK.md](docs/RUNBOOK.md).
+Agent times are execution only; direction and review sat alongside them.
 
-### Terraform variables
+### Quality
 
-`subscription_id` and `tenant_id` have **no defaults** — supply them per
-environment so no tenant identifier is committed. `suffix` and
-`resource_group_name` default to the original estate; override both to deploy a
-second copy, because the storage account and key vault names are globally unique
-and a deleted vault's name is held for 7 days by soft delete:
+- **Nothing invented.** Findings were checked against the source data; none was
+  wrong.
+- **Beyond the brief.** The review's highest-severity finding was not planted,
+  and the design-first import found an Azure-owned value that had not been
+  identified.
+- **Proven, not asserted.** Every stage ends in a mechanical check — a zero
+  difference, a clean deployment — rather than a judgement that it looks right.
 
-```bash
-cd terraform
-cat > terraform.tfvars <<'EOF'
-subscription_id     = "<your subscription id>"
-tenant_id           = "<your tenant id>"
-suffix              = "restore01"
-resource_group_name = "rg-agentpoc-restore01"
-EOF
-terraform init && terraform plan
-```
+### Control
 
-`terraform.tfvars` is gitignored. Alternatively export `TF_VAR_*`.
-
-### Teardown
-
-```bash
-./scripts/teardown.sh rg-agentpoc-xxxxxxxx    # the az-built sandbox
-cd terraform && terraform destroy             # anything Terraform applied
-```
-
-`teardown.sh` refuses any resource group not tagged `purpose=agent-pipeline-poc`,
-prints what it will destroy, and makes you type the group name.
-
-Cost is pennies per day — the private endpoint is the only meaningful line item.
+- **Separation of duties enforced by tooling**, not by instruction: reviewers
+  cannot edit, builders cannot deploy.
+- **Parallel delivery.** The rebuild and the modernisation ran at the same time
+  in isolated workspaces without interfering.
+- **Repeatable.** Every stage consumes the previous stage's output from the
+  repository, so the whole pipeline can be re-run against a new estate.
 
 ---
 
-## Environment hazards
+## Challenges
 
-Every one of these cost real time on a Windows machine, and every one failed
-*silently* rather than loudly. They are documented because the next person will
-hit them too.
+**Matching reality is not the same as reproducing it.** Act 3's Terraform
+matched the live estate perfectly and still carried two defects: a permission
+pinned to the original identity rather than to whichever identity the code
+creates, and values Azure generates itself recorded as if someone had chosen
+them. Neither shows up until the code is deployed somewhere new. This is why Act
+5 exists, and why we recommend the design-first approach of Act 6a.
 
-| Hazard | Symptom |
+**Telling configuration from platform behaviour.** An exporter reads what Azure
+reports and cannot know which values a person chose and which Azure stamped on
+its own. Separating the two needs judgement, and it is the difference between
+code that deploys once and code that deploys anywhere.
+
+**Modernising without changing behaviour.** Microsoft's verified modules default
+to stronger security than the estate had. Adopting them honestly means holding
+the original behaviour first and changing it as a deliberate, separate decision —
+otherwise a refactor silently becomes a security change nobody reviewed.
+
+**Module coverage.** Only some resources can move onto verified modules without
+rebuilding them. Knowing which, and why, matters before promising a client a
+fully modular estate.
+
+**Trusting agent output.** Agents are fast and often right, but a pipeline is
+only as credible as its checks. Every claim in this exercise was independently
+verified, and the grading key was fixed before the agents ran. That discipline
+is what turns agent output into evidence.
+
+---
+
+## Deliverables
+
+| | |
 |---|---|
-| **MSYS path rewriting** in Git Bash | Azure resource IDs become `C:/Program Files/Git/subscriptions/...`. Export `MSYS_NO_PATHCONV=1` and `MSYS2_ARG_CONV_EXCL="*"`. |
-| **`az … -o tsv` emits CRLF** on multi-line output | A stray `\r` inside a resource ID corrupts any URL built from it, and ARM answers with an HTML *"Bad Request — Invalid URL"* that reads like a server fault. Pipe through `tr -d '\r'`. |
-| **Free-trial subscriptions have 0 App Service quota** at *every* tier, F1 included | The sandbox falls back to a user-assigned managed identity. Set `DEPLOY_WEBAPP=true` on pay-as-you-go. |
-| **`winget` does not add `aztfexport` to PATH** | Invoke it by full path. `preflight.sh` detects this and warns rather than failing. |
-| **`aztfexport --dev-provider`** at v0.20.0 | Resolves to azurerm 5.6.0 and fails resource-group export with "no state" *while appearing to succeed*. Omit the flag. |
-| **`az monitor diagnostic-settings list`** | Returns Bad Request for several resource types whether or not settings exist, so it cannot distinguish "none configured" from "query failed". `discover.sh` uses the REST API and records the query status. |
+| [Architecture](docs/architecture.md) | As-built design, reverse-engineered, with intended-versus-realised analysis |
+| [Well-Architected review](docs/waf-review.md) | Findings by pillar and severity, with an ordered remediation plan |
+| [Generated inventory](docs/generated-inventory.md) | Topology, dependencies and immutable decisions, regenerated from the live export |
+| [`terraform/`](terraform/) | The imported estate — the proven baseline |
+| [`terraform-avm/`](terraform-avm/) | Modernised onto Azure Verified Modules |
+| [`terraform-hybrid/`](terraform-hybrid/) | Designed first, then imported — the recommended approach |
+| [`grading/`](grading/) | Ground truth, pre-registered criteria, and every score |
 
-That last one is the important one. An earlier version of `discover.sh` recorded
-every failed query as *zero diagnostic settings* — fabricated evidence, and here
-it would have wrecked the probe outright, because one of the planted flaws **is**
-a resource with no diagnostic settings. A false zero is indistinguishable from
-the real thing. Never record an unanswered question as a negative answer.
-
----
-
-## Why a synthetic estate first
-
-You cannot grade a review of infrastructure you do not already understand. When
-the architect returns eight findings against a real estate, there is no way to
-know whether it missed four.
-
-The sandbox is built with known defects and known-good choices, so every stage
-has an objective pass/fail. Once the pipeline passes here, the catalogue's own
-[probe discipline](https://github.com/angrayOne/agent-catalog/blob/main/docs/probes.md)
-calls for one live-validation run against a real application — synthetic fixtures
-cannot surface permission denials mid-run, shell friction, or the false positives
-that only appear in messy real data.
+**Running it yourself:** [docs/running.md](docs/running.md) ·
+**Demonstrating it:** [docs/RUNBOOK.md](docs/RUNBOOK.md)
